@@ -3,8 +3,14 @@
 
 const std = @import("std");
 const testing = std.testing;
-const data = @embedFile("day-{{day}}-1.txt");
-const exampleData = @embedFile("day-{{day}}-1.example.txt");
+const DATA = @embedFile("day-{{day}}-1.txt");
+const EXAMPLE_DATA = @embedFile("day-{{day}}-1.example.txt");
+
+fn process(comptime n: usize, data: *const [n:8]u8) !usize {
+    _ = data;
+
+    return 0;
+}
 
 pub fn main() !void {
     return;
