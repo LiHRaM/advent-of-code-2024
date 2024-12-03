@@ -3,7 +3,6 @@
 const std = @import("std");
 const testing = std.testing;
 const ArrayList = std.ArrayList;
-const exampleData = @embedFile("data-1-1-example.txt");
 const data = @embedFile("day-1-1.txt");
 
 pub fn main() !void {
