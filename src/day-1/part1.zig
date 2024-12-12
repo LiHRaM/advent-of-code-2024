@@ -3,7 +3,7 @@
 const std = @import("std");
 const testing = std.testing;
 const ArrayList = std.ArrayList;
-const data = @embedFile("day-1-1.txt");
+const data = @embedFile("data.txt");
 
 pub fn main() !void {
     const numSize = u64;

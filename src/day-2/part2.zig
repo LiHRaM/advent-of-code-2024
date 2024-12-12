@@ -2,8 +2,8 @@
 
 const std = @import("std");
 const testing = std.testing;
-const DATA = @embedFile("day-2-1.txt");
-const EXAMPLE_DATA = @embedFile("day-2-1.example.txt");
+const DATA = @embedFile("data.txt");
+const EXAMPLE_DATA = @embedFile("data.example.txt");
 
 pub fn main() !void {
     const result = try process(DATA.len, DATA);

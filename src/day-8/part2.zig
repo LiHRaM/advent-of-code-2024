@@ -3,8 +3,8 @@
 const std = @import("std");
 const shared = @import("./shared/shared.zig");
 const testing = std.testing;
-const DATA = @embedFile("day-8-1.txt");
-const EXAMPLE_DATA = @embedFile("day-8-1.example.txt");
+const DATA = @embedFile("data.txt");
+const EXAMPLE_DATA = @embedFile("data.example.txt");
 const SparseMatrix = shared.sparse_matrix.SparseMatrix;
 const SparseMatrixElement = shared.sparse_matrix.SparseMatrixElement;
 const Antinodes = std.AutoHashMap(SparseMatrixElement, void);

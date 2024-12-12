@@ -2,7 +2,7 @@
 
 const std = @import("std");
 const testing = std.testing;
-const DATA = @embedFile("day-3-1.txt");
+const DATA = @embedFile("data.txt");
 
 /// Stores the value of a `mul` operation.
 const MulOp = struct {

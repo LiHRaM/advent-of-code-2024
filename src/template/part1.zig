@@ -3,8 +3,8 @@
 
 const std = @import("std");
 const testing = std.testing;
-const DATA = @embedFile("day-{{day}}-1.txt");
-const EXAMPLE_DATA = @embedFile("day-{{day}}-1.example.txt");
+const DATA = @embedFile("data.txt");
+const EXAMPLE_DATA = @embedFile("data.example.txt");
 
 fn process(comptime text: []const u8) !usize {
     _ = text;

@@ -2,8 +2,8 @@
 
 const std = @import("std");
 const testing = std.testing;
-const DATA = @embedFile("day-3-1.txt");
-const EXAMPLE_DATA = @embedFile("day-3-1.example.txt");
+const DATA = @embedFile("data.txt");
+const EXAMPLE_DATA = @embedFile("data.example.txt");
 
 /// Stores the value of a `mul` operation.
 const MulOp = struct {

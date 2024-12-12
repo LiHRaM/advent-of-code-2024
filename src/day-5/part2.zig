@@ -2,8 +2,8 @@
 
 const std = @import("std");
 const testing = std.testing;
-const DATA = @embedFile("day-5-1.txt");
-const EXAMPLE_DATA = @embedFile("day-5-1.example.txt");
+const DATA = @embedFile("data.txt");
+const EXAMPLE_DATA = @embedFile("data.example.txt");
 
 fn Rule(comptime T: type) type {
     return struct {
@@ -18,6 +18,17 @@ const Cmp = []const u8;
 
 const Rules = std.MultiArrayList(Rule(Cmp));
 const BanList = std.ArrayList(Cmp);
+
+fn SortByRules(rules: Rules, a: Cmp, b: Cmp) bool {
+    for (rules.items(.before), rules.items(.after)) |before, after| {
+        if (std.mem.eql(u8, before, a) and std.mem.eql(u8, after, b)) {
+            return true;
+        } else if (std.mem.eql(u8, before, b) and std.mem.eql(u8, after, a)) {
+            return false;
+        }
+    }
+    return false;
+}
 
 const State = enum {
     Rules,
@@ -58,7 +69,7 @@ fn process(comptime text: []const u8) !usize {
 
     var sum: usize = 0;
 
-    lines: while (lines.next()) |line| {
+    while (lines.next()) |line| {
         if (line.len == 0) {
             if (state == .Rules) {
                 state = .Updates;
@@ -72,6 +83,8 @@ fn process(comptime text: []const u8) !usize {
                 try rules.append(allocator, rule);
             },
             .Updates => {
+                var hasBadOrder: bool = false;
+
                 var numbers = std.ArrayList(Cmp).init(allocator);
                 defer numbers.deinit();
 
@@ -81,10 +94,13 @@ fn process(comptime text: []const u8) !usize {
                 var updateIter = std.mem.splitScalar(u8, line, ',');
                 while (updateIter.next()) |num| {
                     if (bans.get(num)) |_| {
-                        continue :lines;
+                        hasBadOrder = true;
                     }
 
                     try numbers.append(num);
+
+                    if (hasBadOrder) continue;
+
                     for (rules.items(.before), rules.items(.after)) |before, after| {
                         if (std.mem.eql(u8, num, after)) {
                             try bans.put(before, undefined);
@@ -92,7 +108,10 @@ fn process(comptime text: []const u8) !usize {
                     }
                 }
 
-                errdefer |err| std.log.err("Failed to parse number: {}\n", .{err});
+                if (!hasBadOrder) continue;
+
+                std.mem.sort(Cmp, numbers.items, rules, SortByRules);
+
                 const middlePos = @divFloor(numbers.items.len, 2);
                 const middleNumber = try std.fmt.parseInt(usize, numbers.items[middlePos], 10);
                 sum += middleNumber;
@@ -109,18 +128,5 @@ pub fn main() !void {
 }
 
 test "example" {
-    try std.testing.expectEqual(143, process(EXAMPLE_DATA));
-}
-
-test "edge boundaries" {
-    // This case is interesting, because when parsing `02`,
-    // we need to check all rules in which it is located on both
-    // the left AND the right.
-    // The initial algorithm I had in mind would have missed this case.
-    const data =
-        \\01|02
-        \\
-        \\03,02,01
-    ;
-    try std.testing.expectEqual(0, process(data));
+    try std.testing.expectEqual(123, process(EXAMPLE_DATA));
 }

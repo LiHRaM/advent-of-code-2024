@@ -2,7 +2,7 @@
 
 const std = @import("std");
 const testing = std.testing;
-const DATA = @embedFile("day-4-1.txt");
+const DATA = @embedFile("data.txt");
 
 fn IndexOfScalarIter(comptime T: type) type {
     return struct {
@@ -133,7 +133,7 @@ test "matrix operations" {
     var m = SparseMatrix(u8).init(std.testing.allocator);
     defer m.deinit();
 
-    try omnom(&m, "XMA\nSXM\nASX");
+    try omnom(&m, "SMA\nSMM\nASS");
     m.print();
     try std.testing.expectEqual(0, m.findPoint(Point(){ .row = 0, .col = 0 }));
     try std.testing.expectEqual(8, m.findPoint(Point(){ .row = 2, .col = 2 }));
@@ -147,7 +147,7 @@ fn omnom(matrix: *SparseMatrix(u8), text: []const u8) !void {
 
         for (row, 0..) |char, colIndex| {
             switch (char) {
-                'X', 'M', 'A', 'S' => try matrix.insert(char, rowIndex, colIndex),
+                'M', 'A', 'S' => try matrix.insert(char, rowIndex, colIndex),
                 else => continue,
             }
         }
@@ -155,11 +155,10 @@ fn omnom(matrix: *SparseMatrix(u8), text: []const u8) !void {
 }
 
 fn process(comptime text: []const u8, allocator: std.mem.Allocator) !usize {
-    // Step 1: Collect letters ['X','M','A','S'] into an appropriate data structure
-    // Step 2: For each 'X', check if there is an adjacent 'M'.
-    //      2.1: If there is an adjacent 'M', mark its direction.
-    //      2.2: Check if 'A' exists in the adjacent coordinate to 'M' in the same direction.
-    //      2.3: Check if 'S' exists in the adjacent coordinate to 'A' in the same direction.
+    // Step 1: Collect letters ['M','A','S'] into an appropriate data structure
+    // Step 2: For each 'A', check the corners.
+    // Step 2.1: Check the top left corner. If it is 'M', assume the bottom right corner is an 'A'.
+    // Step 2.2. Repeat for top right corner.
 
     var sum: usize = 0;
 
@@ -168,31 +167,40 @@ fn process(comptime text: []const u8, allocator: std.mem.Allocator) !usize {
 
     try omnom(&m, text);
 
-    // For each 'X'...
-    var xIter = IndexOfScalarIter(u8).create('X', m.values.items);
-    while (xIter.next()) |xPos| {
-        const ptX = m.getPoint(xPos);
+    var iterA = IndexOfScalarIter(u8).create('A', m.values.items);
 
-        var mIter = IndexOfScalarIter(u8).create('M', m.values.items);
-        while (mIter.next()) |mPos| {
-            const ptM = m.getPoint(mPos);
+    while (iterA.next()) |posA| {
+        const ptA = m.getPoint(posA);
 
-            if (@max(ptM.col, ptX.col) - @min(ptM.col, ptX.col) > 1) continue;
-            if (@max(ptM.row, ptX.row) - @min(ptM.row, ptX.row) > 1) continue;
+        // TODO: Refactor this into a single function with different parameters
+        // never gonna happen ofc
+        const ptTopLeft = ptA.move(-1, -1) orelse continue;
+        const posTopLeft = m.findPoint(ptTopLeft) orelse continue;
+        const valTopLeft = m.values.items[posTopLeft];
+        const ptBotRight = ptA.move(1, 1) orelse continue;
+        const posBotRight = m.findPoint(ptBotRight) orelse continue;
+        const valBotRight = m.values.items[posBotRight];
+        const expectedBotRight: u8 = switch (valTopLeft) {
+            'M' => 'S',
+            'S' => 'M',
+            else => continue,
+        };
+        if (valBotRight != expectedBotRight) continue;
 
-            const rowDistance: i64 = if (ptX.row < ptM.row) 1 else if (ptX.row > ptM.row) -1 else 0;
-            const colDistance: i64 = if (ptX.col < ptM.col) 1 else if (ptX.col > ptM.col) -1 else 0;
+        const ptTopRight = ptA.move(-1, 1) orelse continue;
+        const posTopRight = m.findPoint(ptTopRight) orelse continue;
+        const valTopRight = m.values.items[posTopRight];
+        const ptBotLeft = ptA.move(1, -1) orelse continue;
+        const posBotLeft = m.findPoint(ptBotLeft) orelse continue;
+        const valBotLeft = m.values.items[posBotLeft];
+        const expectedBotLeft: u8 = switch (valTopRight) {
+            'M' => 'S',
+            'S' => 'M',
+            else => continue,
+        };
+        if (valBotLeft != expectedBotLeft) continue;
 
-            const ptA = ptM.move(rowDistance, colDistance) orelse continue;
-            const posA = m.findPoint(ptA) orelse continue;
-            if (m.values.items[posA] != 'A') continue;
-
-            const ptS = ptA.move(rowDistance, colDistance) orelse continue;
-            const posS = m.findPoint(ptS) orelse continue;
-            if (m.values.items[posS] != 'S') continue;
-
-            sum += 1;
-        }
+        sum += 1;
     }
 
     return sum;
@@ -219,9 +227,5 @@ test "example 1" {
         \\MXMXAXMASX
     ;
 
-    try std.testing.expectEqual(18, process(data, std.testing.allocator));
-    try std.testing.expectEqual(1, process("XXMAS", std.testing.allocator));
-    try std.testing.expectEqual(1, process("SAMX", std.testing.allocator));
-    try std.testing.expectEqual(1, process("S\nA\nM\nX", std.testing.allocator));
-    try std.testing.expectEqual(1, process("X\nM\nA\nS", std.testing.allocator));
+    try std.testing.expectEqual(9, process(data, std.testing.allocator));
 }
